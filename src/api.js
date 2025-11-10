@@ -1,5 +1,6 @@
 // Define a URL base dependendo do ambiente
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+console.log("API URL:", BASE_URL);
 
 export async function apiFetch(endpoint, options = {}, authToken = null) {
   const token = authToken || localStorage.getItem("token");
