@@ -1,7 +1,6 @@
-/**
- * Função genérica para chamadas à API
- * Suporta autenticação via Bearer token
- */
+// Define a URL base dependendo do ambiente
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
 export async function apiFetch(endpoint, options = {}, authToken = null) {
   const token = authToken || localStorage.getItem("token");
 
@@ -14,7 +13,7 @@ export async function apiFetch(endpoint, options = {}, authToken = null) {
   let response, data;
 
   try {
-    response = await fetch(`http://localhost:8080/api/v1/${endpoint}`, {
+    response = await fetch(`${BASE_URL}/api/v1/${endpoint}`, {
       ...options,
       headers,
     });
