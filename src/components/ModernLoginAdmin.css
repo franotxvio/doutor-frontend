@@ -1,0 +1,93 @@
+/* ModernLoginAdmin.css */
+
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f2f5;
+    height: 100%;
+}
+
+.admin-login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.admin-login-card {
+    background: #fff;
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.admin-login-card h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.admin-login-card form {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-login-card input {
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+}
+
+.admin-login-card input:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+}
+
+.admin-login-card button {
+    padding: 12px;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.admin-login-card button:hover {
+    background: #0056b3;
+}
+
+.admin-login-card .alert-error {
+    color: #d9534f;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.admin-login-card .alert-success {
+    color: #28a745;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.admin-login-card p {
+    font-size: 14px;
+    color: #666;
+    margin-top: 10px;
+}
+
+.admin-login-card p a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.admin-login-card p a:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,29 @@
+.product-list {
+    padding: 2rem;
+    text-align: center;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.product-card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 1rem;
+    background: #fafafa;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.btn {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #0077ff;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+}

@@ -1,0 +1,708 @@
+/* ===== Reset e Variáveis ===== */
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-color: #5a67d8;
+  --primary-dark: #4c51bf;
+  --success-color: #4caf50;
+  --success-dark: #43a047;
+  --danger-color: #ef4444;
+  --danger-dark: #dc2626;
+  --warning-color: #f59e0b;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --bg-light: #f8fafc;
+  --white: #ffffff;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 6px 20px rgba(0, 0, 0, 0.2);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== Dashboard Container ===== */
+.rental-dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text-primary);
+  background: var(--primary-gradient);
+}
+
+/* ===== Header ===== */
+.rental-dashboard header {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--shadow-md);
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.rental-dashboard header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--white);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  letter-spacing: -0.5px;
+}
+
+.rental-dashboard header button {
+  background: linear-gradient(135deg, #f43f5e, #ec4899);
+  color: var(--white);
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.rental-dashboard header button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.rental-dashboard header button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.rental-dashboard header button:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(244, 63, 94, 0.4);
+}
+
+.rental-dashboard header button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ===== Navigation ===== */
+.rental-dashboard nav {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 40px;
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 80px;
+  z-index: 99;
+}
+
+.rental-dashboard nav button {
+  background: transparent;
+  border: 2px solid transparent;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.rental-dashboard nav button::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: var(--primary-gradient);
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+}
+
+.rental-dashboard nav button:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--primary-color);
+  border-color: rgba(102, 126, 234, 0.2);
+}
+
+.rental-dashboard nav button:hover::after {
+  width: 80%;
+}
+
+.rental-dashboard nav button.active {
+  background: var(--primary-gradient);
+  color: var(--white);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  border-color: transparent;
+}
+
+/* ===== Main Content ===== */
+.rental-dashboard main {
+  flex: 1;
+  padding: 40px;
+  background: var(--bg-light);
+  min-height: calc(100vh - 160px);
+}
+
+/* ===== Toast Notifications ===== */
+.toast-message {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  color: var(--white);
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 9999;
+  animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), slideOutRight 0.4s
+    cubic-bezier(0.68, -0.55, 0.265, 1.55) 2.6s;
+  backdrop-filter: blur(10px);
+}
+
+.toast-message.success {
+  background: linear-gradient(135deg, #4caf50, #43a047);
+}
+
+.toast-message.warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.toast-message.error {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+}
+
+/* ===== Catalog Section ===== */
+.catalog-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.product-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative;
+}
+
+.product-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--primary-gradient);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.product-card:hover::before {
+  opacity: 0.05;
+}
+
+.product-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(102, 126, 234, 0.25);
+}
+
+.product-card img {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.product-card:hover img {
+  transform: scale(1.1);
+}
+
+.product-card h3 {
+  padding: 16px 20px 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.product-card .product-prices {
+  padding: 0 20px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-card .price-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.product-card .price-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.product-card .price-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.product-card button {
+  margin: 0 20px 20px;
+  width: calc(100% - 40px);
+  background: var(--primary-gradient);
+  color: var(--white);
+  border: none;
+  padding: 14px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.product-card button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.product-card button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.product-card button:active {
+  transform: translateY(0);
+}
+
+/* ===== Cart Section ===== */
+.cart-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.5s ease;
+}
+
+.cart-section > p {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 18px;
+  color: var(--text-muted);
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.cart-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary-gradient);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+}
+
+.cart-item:hover::before {
+  transform: scaleY(1);
+}
+
+.cart-item:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+.cart-item img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.cart-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cart-item-info .item-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cart-item-info .item-prices {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.cart-item-info .item-prices span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cart-item-info .item-prices strong {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.cart-item button {
+  background: var(--danger-color);
+  color: var(--white);
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.cart-item button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.cart-item button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.cart-item button:hover {
+  background: var(--danger-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.cart-item button:active {
+  transform: translateY(0);
+}
+
+.cart-section > button {
+  align-self: center;
+  background: var(--success-color);
+  color: var(--white);
+  border: none;
+  padding: 16px 48px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.cart-section > button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.cart-section > button:hover::before {
+  width: 400px;
+  height: 400px;
+}
+
+.cart-section > button:hover {
+  background: var(--success-dark);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+.cart-section > button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ===== Rentals Section ===== */
+.rentals-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  animation: fadeIn 0.5s ease;
+}
+
+.rentals-section > p {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 18px;
+  color: var(--text-muted);
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.rental-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  border-left: 4px solid transparent;
+}
+
+.rental-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--primary-gradient);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.rental-card:hover::before {
+  opacity: 0.03;
+}
+
+.rental-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-left-color: var(--primary-color);
+}
+
+.rental-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--bg-light);
+}
+
+.rental-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.rental-badge {
+  background: var(--success-color);
+  color: var(--white);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.rental-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rental-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.rental-info-label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.rental-info-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.rental-info-value.highlight {
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+  .rental-dashboard header {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .rental-dashboard header h1 {
+    font-size: 24px;
+  }
+
+  .rental-dashboard nav {
+    padding: 12px 20px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rental-dashboard nav button {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .rental-dashboard main {
+    padding: 20px;
+  }
+
+  .catalog-section {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .rentals-section {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-item {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .cart-item img {
+    width: 100%;
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .catalog-section {
+    grid-template-columns: 1fr;
+  }
+
+  .product-card img {
+    height: 280px;
+  }
+}
