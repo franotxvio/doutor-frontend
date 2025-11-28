@@ -18,48 +18,40 @@ export default function RentalDashboard({ token, onLogout }) {
   );
   const navigate = useNavigate();
 
-  // Carrega produtos do backend - COMPATÍVEL COM ADMIN
+  const baseUrl = process.env.REACT_APP_API_URL;
+
+  // Carrega produtos do backend
   useEffect(() => {
     const fetchProducts = async () => {
       setProductsLoading(true);
       try {
         const data = await apiFetch("produtos", { method: "GET" }, token);
-        console.log("Produtos recebidos da API:", data);
 
-        // Mapeia os campos do backend de forma consistente
-        const mappedProducts = (data || []).map((p) => ({
-          // IDs
-          id: p.id_roupa ?? 0,
-          id_roupa: p.id_roupa ?? 0,
+        const mappedProducts = (data || []).map((p) => {
+          // Garante URL completa da imagem
+          const imageUrl = p.image_url || p.imagem_url;
+          const finalImageUrl = imageUrl
+            ? imageUrl.startsWith("http")
+              ? imageUrl
+              : `${baseUrl}/uploads/${imageUrl}`
+            : "https://via.placeholder.com/300x400";
 
-          // Dados do produto
-          name: p.categoria ?? "Produto sem nome",
-          categoria: p.categoria ?? "Produto sem nome",
-          tamanho: p.tamanho ?? "-",
-          cores: p.cores ?? "-",
+          return {
+            id: p.id_roupa ?? 0,
+            id_roupa: p.id_roupa ?? 0,
+            name: p.categoria ?? "Produto sem nome",
+            categoria: p.categoria ?? "Produto sem nome",
+            tamanho: p.tamanho ?? "-",
+            cores: p.cores ?? "-",
+            tempoValor: p.tempo_valor ?? p.tempoValor ?? 0,
+            tempo_valor: p.tempo_valor ?? p.tempoValor ?? 0,
+            status: p.status ?? "disponivel",
+            localizacao: p.localizacao ?? "-",
+            image_url: finalImageUrl,
+            imagem_url: finalImageUrl,
+          };
+        });
 
-          // Valor (aceita ambos os formatos)
-          tempoValor: p.tempo_valor ?? p.tempoValor ?? 0,
-          tempo_valor: p.tempo_valor ?? p.tempoValor ?? 0,
-
-          // Status e localização
-          status: p.status ?? "disponivel",
-          localizacao: p.localizacao ?? "-",
-
-          // Imagens (aceita ambos os formatos)
-          image_url:
-            p.image_url ||
-            p.imagem_url ||
-            "https://via.placeholder.com/300x400",
-          imagem_url:
-            p.image_url ||
-            p.imagem_url ||
-            "https://via.placeholder.com/300x400",
-        }));
-
-        console.log("Produtos mapeados:", mappedProducts);
-
-        // Filtra apenas produtos disponíveis para usuários
         const availableProducts = mappedProducts.filter(
           (p) => p.status === "disponivel"
         );
@@ -73,21 +65,19 @@ export default function RentalDashboard({ token, onLogout }) {
       }
     };
     fetchProducts();
-  }, [token]);
+  }, [token, baseUrl]);
 
-  // Carrega carrinho do localStorage ao montar o componente
+  // Carrega carrinho do localStorage
   useEffect(() => {
     try {
       const savedCart = localStorage.getItem("cart");
-      if (savedCart) {
-        setCart(JSON.parse(savedCart));
-      }
+      if (savedCart) setCart(JSON.parse(savedCart));
     } catch (err) {
       console.error("Erro ao carregar carrinho:", err);
     }
   }, []);
 
-  // Salva carrinho no localStorage sempre que mudar
+  // Salva carrinho no localStorage
   useEffect(() => {
     try {
       localStorage.setItem("cart", JSON.stringify(cart));
@@ -115,13 +105,8 @@ export default function RentalDashboard({ token, onLogout }) {
     showToast("❌ Item removido do carrinho.");
   };
 
-  const goToRentPage = (productId) => {
-    navigate(`/alugar/${productId}`);
-  };
-
-  const goToAdmin = () => {
-    navigate("/admin");
-  };
+  const goToRentPage = (productId) => navigate(`/alugar/${productId}`);
+  const goToAdmin = () => navigate("/admin");
 
   const confirmRental = async () => {
     if (!cart.length) {
@@ -133,14 +118,12 @@ export default function RentalDashboard({ token, onLogout }) {
     try {
       const results = [];
 
-      // Processa todos os itens do carrinho
       for (const item of cart) {
         const saleData = {
           produtoId: item.id,
           quantidade: 1,
           tempoValor: item.tempoValor,
         };
-
         const res = await createSale(saleData, token);
 
         results.push({
@@ -151,14 +134,9 @@ export default function RentalDashboard({ token, onLogout }) {
         });
       }
 
-      // Atualiza estado de aluguéis
       setRentals((prev) => [...prev, ...results]);
-
-      // Limpa carrinho
       setCart([]);
       localStorage.removeItem("cart");
-
-      // Muda para aba de aluguéis
       setActiveTab("rentals");
 
       showToast(`🎉 ${results.length} item(ns) alugado(s) com sucesso!`);
@@ -170,9 +148,8 @@ export default function RentalDashboard({ token, onLogout }) {
     }
   };
 
-  const calculateCartTotal = () => {
-    return cart.reduce((sum, item) => sum + (item.tempoValor || 0), 0);
-  };
+  const calculateCartTotal = () =>
+    cart.reduce((sum, item) => sum + (item.tempoValor || 0), 0);
 
   return (
     <div className="rental-dashboard">
