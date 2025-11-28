@@ -296,31 +296,20 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
   });
 
   const getImageForCategory = (categoria, imagemUrl) => {
-    // Se tem imagem_url, usa ela
     if (imagemUrl && imagemUrl.trim() !== "") {
-      return imagemUrl;
+      // Corrige caso tenha localhost
+      return imagemUrl.replace(
+        "http://localhost:8080",
+        "https://doutor-backend.onrender.com"
+      );
     }
 
-    // Senão, usa imagem padrão por categoria
     const imageMap = {
-      Vestido:
-        "https://images.unsplash.com/photo-1566479179817-c0b5b4b4b1b5?w=300&h=400&fit=crop",
-      Blazer:
-        "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=400&fit=crop",
-      Saia: "https://images.unsplash.com/photo-1583496661160-fb5886a13d77?w=300&h=400&fit=crop",
-      Calça:
-        "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=400&fit=crop",
-      Camisa:
-        "https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=300&h=400&fit=crop",
-      Casaco:
-        "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=400&fit=crop",
-      Acessório:
-        "https://images.unsplash.com/photo-1506629905607-d405b7a82e96?w=300&h=400&fit=crop",
+      Vestido: "...",
+      Blazer: "...",
+      // ...
     };
-    return (
-      imageMap[categoria] ||
-      "https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&h=400&fit=crop"
-    );
+    return imageMap[categoria] || "...";
   };
 
   return (
