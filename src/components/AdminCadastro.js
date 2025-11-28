@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // 👈 importa o hook do React Router
+import { useNavigate } from "react-router-dom";
+import { createAdmin } from "../api";
 import "./AdminAuth.css";
 
 const AdminCadastro = () => {
-  const navigate = useNavigate(); // 👈 inicializa o hook
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     cnpj: "",
@@ -17,10 +18,7 @@ const AdminCadastro = () => {
   const [success, setSuccess] = useState("");
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const validateForm = () => {
@@ -58,31 +56,21 @@ const AdminCadastro = () => {
         password: formData.password,
       };
 
-      const response = await fetch(
-        "http://localhost:8080/api/v1/admin/create",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(adminData),
-        }
-      );
+      const data = await createAdmin(adminData); // usa api.js
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setSuccess(
-            "Admin cadastrado com sucesso! Redirecionando para login..."
-          );
-          setTimeout(() => {
-            navigate("/admin/login"); // 👈 redireciona automaticamente após cadastro
-          }, 2000);
-        }
+      if (data.success) {
+        setSuccess(
+          "Admin cadastrado com sucesso! Redirecionando para login..."
+        );
+        setTimeout(() => {
+          navigate("/admin/login");
+        }, 2000);
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Erro ao cadastrar admin");
+        setError(data.error || "Erro ao cadastrar admin");
       }
-    } catch (error) {
-      setError("Erro ao conectar com o servidor");
+    } catch (err) {
+      console.error("Erro ao cadastrar admin:", err);
+      setError(err.message || "Erro ao conectar com o servidor");
     } finally {
       setLoading(false);
     }
@@ -181,7 +169,7 @@ const AdminCadastro = () => {
             <button
               type="button"
               className="link-button"
-              onClick={() => navigate("/admin/login")} // 👈 redireciona para ModernLoginAdmin
+              onClick={() => navigate("/admin/login")}
             >
               Faça login
             </button>

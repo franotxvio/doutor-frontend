@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { loginAdmin } from "../api";
 import "./AdminAuth.css";
 
 const AdminLogin = ({ setAdminToken, switchToAdminCadastro }) => {
@@ -17,20 +18,10 @@ const AdminLogin = ({ setAdminToken, switchToAdminCadastro }) => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8080/api/v1/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Credenciais inválidas");
-      }
-
-      const data = await response.json();
+      const data = await loginAdmin(formData);
 
       if (!data.success) {
-        throw new Error("Falha ao autenticar admin");
+        throw new Error("Credenciais inválidas");
       }
 
       const adminToken = `admin_${Date.now()}`;
