@@ -18,7 +18,21 @@ export default function RentalDashboard({ token, onLogout }) {
   );
   const navigate = useNavigate();
 
-  const baseUrl = process.env.REACT_APP_API_URL;
+  // Função para corrigir URLs de imagem
+  const normalizeImageUrl = (url) => {
+    if (!url) return "https://via.placeholder.com/300x400";
+    if (url.startsWith("https://")) return url;
+    if (url.startsWith("http://localhost:8080")) {
+      return url.replace(
+        "http://localhost:8080",
+        "https://doutor-backend.onrender.com"
+      );
+    }
+    if (!url.startsWith("http")) {
+      return `${process.env.REACT_APP_API_URL}/uploads/${url}`;
+    }
+    return url;
+  };
 
   // Carrega produtos do backend
   useEffect(() => {
@@ -28,14 +42,7 @@ export default function RentalDashboard({ token, onLogout }) {
         const data = await apiFetch("produtos", { method: "GET" }, token);
 
         const mappedProducts = (data || []).map((p) => {
-          // Garante URL completa da imagem
-          const imageUrl = p.image_url || p.imagem_url;
-          const finalImageUrl = imageUrl
-            ? imageUrl.startsWith("http")
-              ? imageUrl
-              : `${baseUrl}/uploads/${imageUrl}`
-            : "https://via.placeholder.com/300x400";
-
+          const finalImageUrl = normalizeImageUrl(p.image_url || p.imagem_url);
           return {
             id: p.id_roupa ?? 0,
             id_roupa: p.id_roupa ?? 0,
@@ -55,7 +62,6 @@ export default function RentalDashboard({ token, onLogout }) {
         const availableProducts = mappedProducts.filter(
           (p) => p.status === "disponivel"
         );
-
         setProducts(availableProducts);
       } catch (err) {
         console.error("Erro ao buscar produtos:", err);
@@ -65,7 +71,7 @@ export default function RentalDashboard({ token, onLogout }) {
       }
     };
     fetchProducts();
-  }, [token, baseUrl]);
+  }, [token]);
 
   // Carrega carrinho do localStorage
   useEffect(() => {
@@ -138,7 +144,6 @@ export default function RentalDashboard({ token, onLogout }) {
       setCart([]);
       localStorage.removeItem("cart");
       setActiveTab("rentals");
-
       showToast(`🎉 ${results.length} item(ns) alugado(s) com sucesso!`);
     } catch (err) {
       console.error("Erro ao confirmar aluguel:", err);
@@ -185,24 +190,18 @@ export default function RentalDashboard({ token, onLogout }) {
         {activeTab === "catalog" && (
           <div className="catalog-section">
             {productsLoading ? (
-              <div className="loading-state">
-                <p>⏳ Carregando produtos...</p>
-              </div>
+              <div className="loading-state">⏳ Carregando produtos...</div>
             ) : products.length === 0 ? (
-              <div className="empty-state">
-                <p>📭 Nenhum produto disponível no momento</p>
-              </div>
+              <div className="empty-state">📭 Nenhum produto disponível</div>
             ) : (
               <div className="products-grid">
                 {products.map((p) => (
                   <div key={p.id} className="product-card">
                     <img src={p.image_url} alt={p.name} />
                     <h3>{p.name}</h3>
-                    <div className="product-details">
-                      <p>Tamanho: {p.tamanho}</p>
-                      <p>Cores: {p.cores}</p>
-                      <p className="price">R$ {p.tempoValor.toFixed(2)}</p>
-                    </div>
+                    <p>Tamanho: {p.tamanho}</p>
+                    <p>Cores: {p.cores}</p>
+                    <p className="price">R$ {p.tempoValor.toFixed(2)}</p>
                     <div className="product-actions">
                       <button
                         onClick={() => addToCart(p)}
@@ -230,7 +229,7 @@ export default function RentalDashboard({ token, onLogout }) {
           <div className="cart-section">
             {cart.length === 0 ? (
               <div className="empty-state">
-                <p>🛒 Seu carrinho está vazio</p>
+                🛒 Seu carrinho está vazio
                 <button onClick={() => setActiveTab("catalog")}>
                   Explorar Catálogo
                 </button>
@@ -240,11 +239,7 @@ export default function RentalDashboard({ token, onLogout }) {
                 <div className="cart-items">
                   {cart.map((p) => (
                     <div key={p.id} className="cart-item">
-                      <img
-                        src={p.image_url}
-                        alt={p.name}
-                        className="cart-item-image"
-                      />
+                      <img src={p.image_url} alt={p.name} />
                       <div className="cart-item-details">
                         <h4>{p.name}</h4>
                         <p>
@@ -252,25 +247,21 @@ export default function RentalDashboard({ token, onLogout }) {
                         </p>
                       </div>
                       <div className="cart-item-price">
-                        <span>R$ {p.tempoValor.toFixed(2)}</span>
+                        R$ {p.tempoValor.toFixed(2)}
                       </div>
                       <button
                         onClick={() => removeFromCart(p.id)}
                         className="btn-remove"
-                        aria-label="Remover item"
                       >
                         ❌
                       </button>
                     </div>
                   ))}
                 </div>
-
                 <div className="cart-summary">
                   <div className="cart-total">
                     <span>Total:</span>
-                    <span className="total-value">
-                      R$ {calculateCartTotal().toFixed(2)}
-                    </span>
+                    <span>R$ {calculateCartTotal().toFixed(2)}</span>
                   </div>
                   <button
                     onClick={confirmRental}
@@ -289,34 +280,24 @@ export default function RentalDashboard({ token, onLogout }) {
           <div className="rentals-section">
             {rentals.length === 0 ? (
               <div className="empty-state">
-                <p>📦 Você ainda não tem aluguéis</p>
+                📦 Você ainda não tem aluguéis
                 <button onClick={() => setActiveTab("catalog")}>
                   Ver Catálogo
                 </button>
               </div>
             ) : (
               <div className="rentals-list">
-                {rentals.map((r, index) => (
-                  <div key={r.backendId || index} className="rental-item">
-                    <div className="rental-header">
-                      <h4>{r.name}</h4>
-                      <span className="rental-id">
-                        #{r.backendId || "Pendente"}
-                      </span>
-                    </div>
-                    <div className="rental-details">
-                      <p>
-                        Tamanho: {r.tamanho} | Cores: {r.cores}
-                      </p>
-                      {r.timestamp && (
-                        <p className="rental-date">
-                          {new Date(r.timestamp).toLocaleDateString("pt-BR")}
-                        </p>
-                      )}
-                    </div>
-                    <div className="rental-total">
-                      <span>Total: R$ {r.total.toFixed(2)}</span>
-                    </div>
+                {rentals.map((r, i) => (
+                  <div key={r.backendId || i} className="rental-item">
+                    <h4>{r.name}</h4>
+                    <span>#{r.backendId || "Pendente"}</span>
+                    <p>
+                      Tamanho: {r.tamanho} | Cores: {r.cores}
+                    </p>
+                    {r.timestamp && (
+                      <p>{new Date(r.timestamp).toLocaleDateString("pt-BR")}</p>
+                    )}
+                    <p>Total: R$ {r.total.toFixed(2)}</p>
                   </div>
                 ))}
               </div>
