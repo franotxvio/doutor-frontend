@@ -5,6 +5,7 @@ import {
   buscarProdutoPorId,
   atualizarProduto,
   inativarProduto,
+  uploadImagemProduto,
 } from "./produtos";
 import SalesForm from "./SalesForm";
 import "./AdminDashboard.css";
@@ -31,6 +32,7 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
     localizacao: "",
     imagem_url: "",
   });
+  const [imagemFile, setImagemFile] = useState(null);
 
   const categorias = [
     "Vestido",
@@ -100,8 +102,14 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
         ...produtoForm,
         tempoValor: parseInt(produtoForm.tempoValor),
       };
+      // Cria primeiro o produto (sem depender do upload)
+      const created = await criarProduto(produtoData);
+      const newId = created?.id || created?.ID || created?.id_roupa;
 
-      await criarProduto(produtoData);
+      // Se houver arquivo de imagem, faz upload e atualiza imagem_url
+      if (newId && imagemFile) {
+        await uploadImagemProduto(newId, imagemFile);
+      }
       setSuccess("✅ Produto cadastrado com sucesso!");
       setProdutoForm({
         categoria: "",
@@ -112,6 +120,7 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
         localizacao: "",
         imagem_url: "",
       });
+      setImagemFile(null);
       fetchProdutos();
       setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
@@ -152,6 +161,7 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
         localizacao: produto.localizacao || "",
         imagem_url: produto.imagem_url || "",
       });
+      setImagemFile(null);
       setShowEditModal(true);
     } catch (error) {
       setError("Erro ao carregar produto para edição");
@@ -171,8 +181,11 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
         ...produtoForm,
         tempoValor: parseInt(produtoForm.tempoValor),
       };
-
       await atualizarProduto(editingProduct.id_roupa, produtoData);
+      // Se houver novo arquivo, faz upload após atualizar dados
+      if (imagemFile) {
+        await uploadImagemProduto(editingProduct.id_roupa, imagemFile);
+      }
       setSuccess("✅ Produto atualizado com sucesso!");
       setShowEditModal(false);
       setEditingProduct(null);
@@ -185,6 +198,7 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
         localizacao: "",
         imagem_url: "",
       });
+      setImagemFile(null);
       fetchProdutos();
       setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
@@ -589,14 +603,13 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="imagem_url">URL da Imagem:</label>
+                  <label htmlFor="imagem_file">Imagem:</label>
                   <input
-                    type="text"
-                    id="imagem_url"
-                    name="imagem_url"
-                    value={produtoForm.imagem_url}
-                    onChange={handleProdutoChange}
-                    placeholder="URL da imagem do produto (opcional)"
+                    type="file"
+                    id="imagem_file"
+                    name="imagem_file"
+                    accept="image/*"
+                    onChange={(e) => setImagemFile(e.target.files?.[0] || null)}
                   />
                 </div>
                 <button type="submit" className="submit-btn">
@@ -710,14 +723,15 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="edit-imagem_url">URL da Imagem:</label>
+                  <label htmlFor="edit-imagem_file">
+                    Nova Imagem (opcional):
+                  </label>
                   <input
-                    type="text"
-                    id="edit-imagem_url"
-                    name="imagem_url"
-                    value={produtoForm.imagem_url}
-                    onChange={handleProdutoChange}
-                    placeholder="URL da imagem do produto (opcional)"
+                    type="file"
+                    id="edit-imagem_file"
+                    name="imagem_file"
+                    accept="image/*"
+                    onChange={(e) => setImagemFile(e.target.files?.[0] || null)}
                   />
                 </div>
                 <div className="modal-actions">

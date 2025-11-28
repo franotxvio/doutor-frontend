@@ -1,7 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // 👈 importa o hook do React Router
 import "./AdminAuth.css";
 
-const AdminCadastro = ({ setAdminToken, switchToAdminLogin }) => {
+const AdminCadastro = () => {
+  const navigate = useNavigate(); // 👈 inicializa o hook
+
   const [formData, setFormData] = useState({
     cnpj: "",
     name: "",
@@ -59,9 +62,7 @@ const AdminCadastro = ({ setAdminToken, switchToAdminLogin }) => {
         "http://localhost:8080/api/v1/admin/create",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(adminData),
         }
       );
@@ -73,7 +74,7 @@ const AdminCadastro = ({ setAdminToken, switchToAdminLogin }) => {
             "Admin cadastrado com sucesso! Redirecionando para login..."
           );
           setTimeout(() => {
-            switchToAdminLogin();
+            navigate("/admin/login"); // 👈 redireciona automaticamente após cadastro
           }, 2000);
         }
       } else {
@@ -176,11 +177,11 @@ const AdminCadastro = ({ setAdminToken, switchToAdminLogin }) => {
 
         <div className="admin-auth-footer">
           <p>
-            Já tem uma conta?
+            Já tem uma conta?{" "}
             <button
               type="button"
               className="link-button"
-              onClick={switchToAdminLogin}
+              onClick={() => navigate("/admin/login")} // 👈 redireciona para ModernLoginAdmin
             >
               Faça login
             </button>

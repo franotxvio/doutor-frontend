@@ -1,53 +1,143 @@
-// services/produtos.js
-import {
-  listarProdutos as apiListarProdutos,
-  criarProduto as apiCriarProduto,
-  buscarProdutoPorId as apiBuscarProdutoPorId,
-  inativarProduto as apiInativarProduto,
-  atualizarProduto as apiAtualizarProduto,
-} from "../api";
+import { useState, useEffect } from "react";
+import { apiFetch } from "../api";
 
-/**
- * Retorna todos os produtos (admin ou público conforme token)
- * @param {string} adminToken - Token de autenticação
- */
-export async function listarProdutos(adminToken) {
-  return apiListarProdutos(adminToken);
+// =======================
+// Funções de API
+export async function criarProduto(dados) {
+  try {
+    const response = await apiFetch("produtos", {
+      method: "POST",
+      body: JSON.stringify(dados),
+    });
+    return response;
+  } catch (error) {
+    console.error("Erro ao criar produto:", error.message);
+    throw error;
+  }
 }
 
-/**
- * Cria um novo produto
- * @param {Object} dadosProduto - Dados do produto a ser criado
- * @param {string} adminToken - Token de autenticação
- */
-export async function criarProduto(dadosProduto, adminToken) {
-  return apiCriarProduto(dadosProduto, adminToken);
+export async function listarProdutos() {
+  try {
+    const response = await apiFetch("produtos", { method: "GET" });
+    return response;
+  } catch (error) {
+    console.error("Erro ao listar produtos:", error.message);
+    throw error;
+  }
 }
 
-/**
- * Busca um produto específico pelo ID
- * @param {number|string} idProduto - ID do produto
- * @param {string} adminToken - Token de autenticação
- */
-export async function buscarProdutoPorId(idProduto, adminToken) {
-  return apiBuscarProdutoPorId(idProduto, adminToken);
+export async function buscarProdutoPorId(id) {
+  try {
+    const response = await apiFetch(`produtos/${id}`, { method: "GET" });
+    return response;
+  } catch (error) {
+    console.error("Erro ao buscar produto:", error.message);
+    throw error;
+  }
 }
 
-/**
- * Atualiza os dados de um produto existente
- * @param {number|string} idProduto - ID do produto
- * @param {Object} dadosProduto - Novos dados do produto
- * @param {string} adminToken - Token de autenticação
- */
-export async function atualizarProduto(idProduto, dadosProduto, adminToken) {
-  return apiAtualizarProduto(idProduto, dadosProduto, adminToken);
+export async function atualizarProduto(id, dados) {
+  try {
+    const response = await apiFetch(`produtos/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(dados),
+    });
+    return response;
+  } catch (error) {
+    console.error("Erro ao atualizar produto:", error.message);
+    throw error;
+  }
 }
 
-/**
- * Inativa ou deleta um produto
- * @param {number|string} idProduto - ID do produto
- * @param {string} adminToken - Token de autenticação
- */
-export async function inativarProduto(idProduto, adminToken) {
-  return apiInativarProduto(idProduto, adminToken);
+export async function inativarProduto(id) {
+  try {
+    const response = await apiFetch(`produtos/${id}/inativar`, {
+      method: "PUT",
+    });
+    return response;
+  } catch (error) {
+    console.error("Erro ao inativar produto:", error.message);
+    throw error;
+  }
+}
+
+export async function uploadImagemProduto(id, file) {
+  const formData = new FormData();
+  formData.append("imagem", file);
+
+  try {
+    const response = await apiFetch(`admin/${id}/imagem`, {
+      // <- admin
+      method: "POST",
+      body: formData,
+    });
+    return response;
+  } catch (error) {
+    console.error("Erro ao enviar imagem do produto:", error.message);
+    throw error;
+  }
+}
+
+// =======================
+// Componentes React
+
+export function ProductList() {
+  const [produtos, setProdutos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProdutos() {
+      try {
+        const data = await listarProdutos();
+        setProdutos(data);
+      } catch (err) {
+        console.error("Erro ao listar produtos:", err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProdutos();
+  }, []);
+
+  if (loading) return <p>Carregando produtos...</p>;
+
+  return (
+    <div>
+      {produtos.map((p) => (
+        <div key={p.id}>
+          <h3>{p.nome}</h3>
+          <p>{p.descricao}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function ProductDetail({ id }) {
+  const [produto, setProduto] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProduto() {
+      try {
+        const data = await buscarProdutoPorId(id);
+        setProduto(data);
+      } catch (err) {
+        console.error("Erro ao buscar produto:", err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProduto();
+  }, [id]);
+
+  if (loading) return <p>Carregando produto...</p>;
+  if (!produto) return <p>Produto não encontrado</p>;
+
+  return (
+    <div>
+      <h2>{produto.nome}</h2>
+      <p>{produto.descricao}</p>
+    </div>
+  );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { createSale, listarProdutos } from "../api";
+import { createSale, listAllProducts } from "../api";
 import "./SalesForm.css";
 
 function SalesForm({ adminToken }) {
@@ -12,8 +12,8 @@ function SalesForm({ adminToken }) {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await listarProdutos(adminToken);
-        setProducts(Array.isArray(response) ? response : []); // garantindo array
+        const response = await listAllProducts(adminToken);
+        setProducts(response.data);
       } catch (error) {
         console.error("Erro ao buscar produtos:", error);
         setMessage("Erro ao carregar produtos.");
@@ -23,11 +23,9 @@ function SalesForm({ adminToken }) {
   }, [adminToken]);
 
   useEffect(() => {
-    const product = products.find(
-      (p) => p.id_roupa === parseInt(selectedProduct)
-    );
+    const product = products.find((p) => p.Id === parseInt(selectedProduct));
     if (product) {
-      setTotalPrice(product.tempoValor * quantity);
+      setTotalPrice(product.TempoValor * quantity);
     } else {
       setTotalPrice(0);
     }
@@ -43,9 +41,7 @@ function SalesForm({ adminToken }) {
     }
 
     try {
-      const product = products.find(
-        (p) => p.id_roupa === parseInt(selectedProduct)
-      );
+      const product = products.find((p) => p.Id === parseInt(selectedProduct));
       if (!product) {
         setMessage("Produto selecionado inválido.");
         return;
@@ -57,7 +53,7 @@ function SalesForm({ adminToken }) {
         valor_total: totalPrice,
       };
 
-      await createSale(saleData, adminToken); // ✅ usando createSale
+      await createSale(saleData, adminToken);
       setMessage("Venda criada com sucesso!");
       setSelectedProduct("");
       setQuantity(1);
@@ -84,8 +80,8 @@ function SalesForm({ adminToken }) {
           >
             <option value="">Selecione um produto</option>
             {products.map((product) => (
-              <option key={product.id_roupa} value={product.id_roupa}>
-                {product.categoria} - {product.tamanho} ({product.tempoValor}{" "}
+              <option key={product.Id} value={product.Id}>
+                {product.Categoria} - {product.Tamanho} ({product.TempoValor}{" "}
                 R$)
               </option>
             ))}

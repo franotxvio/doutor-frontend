@@ -6,21 +6,32 @@ import {
   Navigate,
 } from "react-router-dom";
 
+// Usuário
 import ModernLogin from "./components/ModernLogin";
 import ModernCadastro from "./components/ModernCadastro";
 import AtivarConta from "./components/Sellers";
 import RentalDashboard from "./components/RentalDashboard";
 import RentClothingPage from "./components/RentClothingPage";
-import ProductList from "./components/ProductList";
-import ProductDetail from "./components/ProductDetail";
-import ModernLoginAdmin from "./components/MordernLoginAdm";
+import { ProductList, ProductDetail } from "./components/produtos";
+
+// Admin
+import ModernLoginAdmin from "./components/ModernLoginAdmin";
+import AdminCadastro from "./components/AdminCadastro";
 import AdminDashboard from "./components/AdminDashboard";
+
 import "./App.css";
 
 function App() {
+  // TOKEN do usuário (não afeta admin)
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [currentView, setCurrentView] = useState("login");
 
+  // TOKEN do admin como estado reativo
+  const [isAdminLogged, setIsAdminLogged] = useState(
+    !!localStorage.getItem("adminToken")
+  );
+
+  // funções de controle
   const handleLogout = () => {
     setToken("");
     localStorage.removeItem("token");
@@ -33,7 +44,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Rotas de usuário */}
+        {/* ROTAS DE USUÁRIO */}
         {!token ? (
           <>
             <Route
@@ -78,27 +89,35 @@ function App() {
           </>
         )}
 
-        {/* Rotas admin */}
+        {/* ROTAS DE ADMIN */}
+
+        {/* Login do admin */}
         <Route
           path="/admin/login"
           element={
             <ModernLoginAdmin
               setAdminToken={(token) => {
                 localStorage.setItem("adminToken", token);
-                window.location.href = "/admin/dashboard";
+                setIsAdminLogged(true); // atualização reativa
               }}
             />
           }
         />
 
+        {/* Cadastro do admin */}
+        <Route path="/admin/cadastro" element={<AdminCadastro />} />
+
+        {/* Dashboard do admin */}
         <Route
           path="/admin/dashboard"
           element={
-            localStorage.getItem("adminToken") ? (
+            isAdminLogged ? (
               <AdminDashboard
                 onLogout={() => {
                   localStorage.removeItem("adminToken");
-                  window.location.href = "/admin/login";
+                  localStorage.removeItem("role");
+                  localStorage.removeItem("adminEmail");
+                  setIsAdminLogged(false); // logout limpo sem reload
                 }}
               />
             ) : (
@@ -107,7 +126,7 @@ function App() {
           }
         />
 
-        {/* Qualquer rota admin inválida redireciona */}
+        {/* Rota coringa para admin */}
         <Route
           path="/admin/*"
           element={<Navigate to="/admin/login" replace />}

@@ -2,12 +2,16 @@
 const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 console.log("API URL:", BASE_URL);
 
+/**
+ * Função genérica de fetch para a API
+ */
 export async function apiFetch(endpoint, options = {}, authToken = null) {
   const token = authToken || localStorage.getItem("token");
+  const isFormData = options.body instanceof FormData;
 
   const headers = {
-    "Content-Type": "application/json",
     ...(token && { Authorization: `Bearer ${token}` }),
+    ...(!isFormData && { "Content-Type": "application/json" }),
     ...options.headers,
   };
 
@@ -40,7 +44,24 @@ export async function apiFetch(endpoint, options = {}, authToken = null) {
 }
 
 /**
- * Produtos (Admin ou público)
+ * Usuário
+ */
+export async function login(dadosLogin) {
+  return apiFetch("login", {
+    method: "POST",
+    body: JSON.stringify(dadosLogin),
+  });
+}
+
+export async function cadastro(dadosCadastro) {
+  return apiFetch("cadastros", {
+    method: "POST",
+    body: JSON.stringify(dadosCadastro),
+  });
+}
+
+/**
+ * Produtos
  */
 export async function listarProdutos(token) {
   return apiFetch("produtos", { method: "GET" }, token);
@@ -53,10 +74,7 @@ export async function buscarProdutoPorId(id, token) {
 export async function criarProduto(dadosProduto, token) {
   return apiFetch(
     "produtos",
-    {
-      method: "POST",
-      body: JSON.stringify(dadosProduto),
-    },
+    { method: "POST", body: JSON.stringify(dadosProduto) },
     token
   );
 }
@@ -64,10 +82,7 @@ export async function criarProduto(dadosProduto, token) {
 export async function atualizarProduto(id, dadosProduto, token) {
   return apiFetch(
     `produtos/${id}`,
-    {
-      method: "PUT",
-      body: JSON.stringify(dadosProduto),
-    },
+    { method: "PUT", body: JSON.stringify(dadosProduto) },
     token
   );
 }
@@ -82,40 +97,28 @@ export async function inativarProduto(id, token) {
 export async function createSale(saleData, token) {
   return apiFetch(
     "sales",
-    {
-      method: "POST",
-      body: JSON.stringify(saleData),
-    },
+    { method: "POST", body: JSON.stringify(saleData) },
     token
   );
 }
 
 /**
- * Cadastros
- */
-export async function cadastro(dadosCadastro) {
-  return apiFetch("cadastros", {
-    method: "POST",
-    body: JSON.stringify(dadosCadastro),
-  });
-}
-
-/**
- * Login
- */
-export async function login(dadosLogin) {
-  return apiFetch("login", {
-    method: "POST",
-    body: JSON.stringify(dadosLogin),
-  });
-}
-
-/**
  * Admin
  */
-export async function admin(dadosAdmin) {
+export async function loginAdmin(credentials) {
   return apiFetch("admin/login", {
     method: "POST",
-    body: JSON.stringify(dadosAdmin),
+    body: JSON.stringify(credentials),
   });
+}
+
+export async function createAdmin(adminData) {
+  return apiFetch("admin/create", {
+    method: "POST",
+    body: JSON.stringify(adminData),
+  });
+}
+
+export async function listAllProducts(adminToken) {
+  return apiFetch("admin/produtos", { method: "GET" }, adminToken);
 }
