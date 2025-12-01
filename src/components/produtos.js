@@ -52,7 +52,7 @@ export async function atualizarProduto(id, dados) {
 export async function inativarProduto(id) {
   try {
     const response = await apiFetch(`produtos/${id}/inativar`, {
-      method: "PUT",
+      method: "DELETE",
     });
     return response;
   } catch (error) {
