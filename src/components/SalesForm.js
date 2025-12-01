@@ -1,74 +1,77 @@
 import React, { useState, useEffect } from "react";
-import { createSale, listAllProducts } from "../api";
+import { criarVenda } from "./vendas"; // Importa a função de criação de venda
+import { listarProdutos } from "./produtos"; // Presume que esta função existe para buscar produtos
 import "./SalesForm.css";
 
-function SalesForm({ adminToken }) {
+function SalesForm({ adminToken, onSaleCreated }) {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [totalPrice, setTotalPrice] = useState(0);
+  const [clienteEmail, setClienteEmail] = useState("");
+  const [total, setTotal] = useState("");
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Efeito para buscar a lista de produtos ao carregar o componente
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await listAllProducts(adminToken);
-        setProducts(response.data);
+        // Presume que listarProdutos retorna um array de produtos
+        const response = await listarProdutos();
+        setProducts(response);
       } catch (error) {
         console.error("Erro ao buscar produtos:", error);
         setMessage("Erro ao carregar produtos.");
       }
     };
     fetchProducts();
-  }, [adminToken]);
-
-  useEffect(() => {
-    const product = products.find((p) => p.Id === parseInt(selectedProduct));
-    if (product) {
-      setTotalPrice(product.TempoValor * quantity);
-    } else {
-      setTotalPrice(0);
-    }
-  }, [selectedProduct, quantity, products]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedProduct || quantity <= 0) {
-      setMessage(
-        "Por favor, selecione um produto e insira uma quantidade válida."
-      );
+    setLoading(true);
+    setMessage("");
+
+    if (!selectedProduct || !clienteEmail || !total) {
+      setMessage("Por favor, preencha todos os campos obrigatórios.");
+      setLoading(false);
       return;
     }
 
     try {
-      const product = products.find((p) => p.Id === parseInt(selectedProduct));
-      if (!product) {
-        setMessage("Produto selecionado inválido.");
-        return;
-      }
-
       const saleData = {
-        id_produto: parseInt(selectedProduct),
-        quantidade: quantity,
-        valor_total: totalPrice,
+        ProdutoID: parseInt(selectedProduct),
+        ClienteEmail: clienteEmail,
+        // O campo Total será enviado como string e tratado como objeto complexo no mock de vendas.js
+        Total: total, 
       };
 
-      await createSale(saleData, adminToken);
-      setMessage("Venda criada com sucesso!");
+      await criarVenda(saleData);
+      setMessage("✅ Venda registrada com sucesso!");
+      
+      // Limpar formulário
       setSelectedProduct("");
-      setQuantity(1);
-      setTotalPrice(0);
+      setClienteEmail("");
+      setTotal("");
+      
+      // Notificar o componente pai (AdminDashboard) para atualizar a lista de vendas
+      if (onSaleCreated) {
+        onSaleCreated();
+      }
+
     } catch (error) {
       console.error("Erro ao criar venda:", error);
       setMessage(
-        "Erro ao criar venda. Verifique o console para mais detalhes."
+        `❌ Erro ao registrar venda: ${error.message || "Erro desconhecido"}`
       );
+    } finally {
+      setLoading(false);
+      setTimeout(() => setMessage(""), 5000); // Limpa a mensagem após 5 segundos
     }
   };
 
   return (
     <div className="sales-form-container">
-      <h2>Criar Nova Venda</h2>
+      <h2>Registrar Nova Venda</h2>
       <form onSubmit={handleSubmit} className="sales-form">
         <div className="form-group">
           <label htmlFor="product-select">Produto:</label>
@@ -77,36 +80,48 @@ function SalesForm({ adminToken }) {
             value={selectedProduct}
             onChange={(e) => setSelectedProduct(e.target.value)}
             required
+            disabled={loading}
           >
             <option value="">Selecione um produto</option>
             {products.map((product) => (
-              <option key={product.Id} value={product.Id}>
-                {product.Categoria} - {product.Tamanho} ({product.TempoValor}{" "}
-                R$)
+              // Garantir que cada item renderizado no map() tenha um key único
+              <option key={product.id_roupa || product.ID} value={product.id_roupa || product.ID}>
+                {product.categoria} - {product.tamanho} ({product.tempoValor} R$)
               </option>
             ))}
           </select>
         </div>
+        
         <div className="form-group">
-          <label htmlFor="quantity-input">Quantidade:</label>
+          <label htmlFor="email-input">E-mail do Cliente:</label>
           <input
-            id="quantity-input"
-            type="number"
-            value={quantity}
-            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-            min="1"
+            id="email-input"
+            type="email"
+            value={clienteEmail}
+            onChange={(e) => setClienteEmail(e.target.value)}
             required
+            disabled={loading}
           />
         </div>
+
         <div className="form-group">
-          <label>Valor Total:</label>
-          <span>{totalPrice.toFixed(2)} R$</span>
+          <label htmlFor="total-input">Valor Total (R$):</label>
+          <input
+            id="total-input"
+            type="number"
+            step="0.01"
+            value={total}
+            onChange={(e) => setTotal(e.target.value)}
+            required
+            disabled={loading}
+          />
         </div>
-        <button type="submit" className="submit-btn">
-          Registrar Venda
+
+        <button type="submit" className="submit-btn" disabled={loading}>
+          {loading ? "Registrando..." : "Registrar Venda"}
         </button>
       </form>
-      {message && <p className="message">{message}</p>}
+      {message && <p className={`message ${message.startsWith("❌") ? "error" : "success"}`}>{message}</p>}
     </div>
   );
 }

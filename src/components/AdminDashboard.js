@@ -8,7 +8,9 @@ import {
   uploadImagemProduto,
 } from "./produtos";
 import SalesForm from "./SalesForm";
+import AdminSales from "./AdminSales";
 import "./AdminDashboard.css";
+import { listarVendas } from "./vendas";
 
 const AdminDashboard = ({ adminToken, onLogout }) => {
   const [activeTab, setActiveTab] = useState("listar");
@@ -22,6 +24,9 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
   const [viewingProduct, setViewingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [vendas, setVendas] = useState([]); // Mantido para possível uso futuro, mas AdminSales gerencia a lista
+  const [salesRefreshKey, setSalesRefreshKey] = useState(0); // Chave para forçar a atualização da lista de vendas
+  const [loadingVendas, setLoadingVendas] = useState(false);
 
   const [produtoForm, setProdutoForm] = useState({
     categoria: "",
@@ -91,6 +96,16 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
     fetchProdutos();
   }, []);
 
+  // Função para forçar a atualização da lista de vendas
+  const handleSaleCreated = () => {
+    setSalesRefreshKey(prevKey => prevKey + 1);
+    setActiveTab("vendas"); // Mudar para a aba de listagem após o registro
+  };
+
+  // Função para atualizar a lista de vendas no AdminDashboard (opcional, mas bom para manter o estado centralizado)
+  const handleSalesUpdate = (newSales) => {
+    setVendas(newSales);
+  };
   const handleSubmitProduto = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -102,11 +117,10 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
         ...produtoForm,
         tempoValor: parseInt(produtoForm.tempoValor),
       };
-      // Cria primeiro o produto (sem depender do upload)
+
       const created = await criarProduto(produtoData);
       const newId = created?.id || created?.ID || created?.id_roupa;
 
-      // Se houver arquivo de imagem, faz upload e atualiza imagem_url
       if (newId && imagemFile) {
         await uploadImagemProduto(newId, imagemFile);
       }
@@ -346,6 +360,28 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
                 <span>Cadastrar Produto</span>
               </button>
             </li>
+
+            <li>
+              <button
+                className={`nav-btn ${
+                  activeTab === "registrarVenda" ? "active" : ""
+                }`}
+                onClick={() => setActiveTab("registrarVenda")}
+              >
+                <span className="nav-icon">💸</span>
+                <span>Registrar Venda</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className={`nav-btn ${activeTab === "vendas" ? "active" : ""}`}
+                onClick={() => setActiveTab("vendas")}
+              >
+                <span className="nav-icon">💰</span>
+                <span>Listar Vendas</span>
+              </button>
+            </li>
+
             <li>
               <button
                 className={`nav-btn ${activeTab === "listar" ? "active" : ""}`}
@@ -362,6 +398,10 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
             <div className="stat-item">
               <span className="stat-label">Total de Produtos</span>
               <span className="stat-value">{produtos.length}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Vendas Ativas</span>
+              <span className="stat-value stat-success">{vendas.length}</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Disponíveis</span>
@@ -430,6 +470,11 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
                         {getStatusLabel(status)}
                       </option>
                     ))}
+                    {activeTab === "vendas" && (
+                      <div className="sales-section">
+                        <AdminSales />
+                      </div>
+                    )}
                   </select>
                 </div>
               </div>
@@ -608,9 +653,16 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
             </div>
           )}
 
-          {activeTab === "vender" && (
-            <div className="sales-section">
-              <SalesForm adminToken={adminToken} />
+          {activeTab === "registrarVenda" && (
+            <div className="tab-content">
+              <SalesForm onSaleCreated={handleSaleCreated} />
+            </div>
+          )}
+
+          {activeTab === "vendas" && (
+            <div className="tab-content">
+              {/* Passa a chave para forçar a re-renderização/re-fetch quando uma venda é criada */}
+              <AdminSales key={salesRefreshKey} onSalesUpdate={handleSalesUpdate} />
             </div>
           )}
         </main>
