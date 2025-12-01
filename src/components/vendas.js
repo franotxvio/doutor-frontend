@@ -1,7 +1,6 @@
 import axios from "axios";
 
-const BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:8080/api/v1";
+const BASE_URL = "https://doutor-backend.onrender.com/api/v1";
 
 // Tratamento de valores complexos do backend
 export const processComplexValue = (complexObject) => {
