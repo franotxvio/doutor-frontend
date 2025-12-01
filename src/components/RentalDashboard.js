@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { createSale, apiFetch } from "../api";
 import "./RentalDashboard.css";
 
@@ -11,12 +10,12 @@ export default function RentalDashboard({ token, onLogout }) {
   const [toast, setToast] = useState({ message: "", type: "success" });
   const [isLoading, setIsLoading] = useState(false);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [rentedHighlight, setRentedHighlight] = useState(null);
 
   const userEmail = useMemo(
     () => localStorage.getItem("userEmail") || "Usuário",
     []
   );
-  const navigate = useNavigate();
   const catalogRef = useRef(null);
 
   const normalizeImageUrl = (url) => {
@@ -51,12 +50,8 @@ export default function RentalDashboard({ token, onLogout }) {
             image_url: finalImageUrl,
           };
         });
-        const availableProducts = mappedProducts.filter(
-          (p) => p.status === "disponivel"
-        );
-        setProducts(availableProducts);
-      } catch (err) {
-        console.error("Erro ao buscar produtos:", err);
+        setProducts(mappedProducts);
+      } catch {
         showToast("❌ Falha ao carregar produtos", "error");
       } finally {
         setProductsLoading(false);
@@ -65,23 +60,86 @@ export default function RentalDashboard({ token, onLogout }) {
     fetchProducts();
   }, [token]);
 
-  useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) setCart(JSON.parse(savedCart));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
-
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast({ message: "", type: "success" }), 3000);
   };
 
+  const confirmRental = async (items = cart) => {
+    if (!items.length) {
+      showToast("⚠️ Nenhum item para alugar!", "warning");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const results = [];
+      const updatedProducts = [...products];
+
+      for (const item of items) {
+        const productCheck = await apiFetch(
+          `produtos/${item.id}`,
+          { method: "GET" },
+          token
+        );
+
+        if (productCheck.status !== "disponivel") {
+          showToast(`⚠️ ${item.name} não está mais disponível.`, "warning");
+          continue;
+        }
+
+        const saleData = {
+          produtoId: item.id,
+          quantidade: 1,
+          tempoValor: item.tempoValor,
+        };
+
+        const res = await createSale(saleData, token);
+        const newRental = {
+          ...item,
+          backendId: res?.produtoId || null,
+          total: res?.total || item.tempoValor,
+          timestamp: new Date().toISOString(),
+        };
+        results.push(newRental);
+        const idx = updatedProducts.findIndex((p) => p.id === item.id);
+        if (idx !== -1) updatedProducts[idx].status = "alugado";
+        setRentedHighlight(newRental.id);
+        setTimeout(() => setRentedHighlight(null), 2000);
+      }
+
+      if (!results.length) {
+        showToast("⚠️ Nenhum item pôde ser alugado.", "warning");
+        return;
+      }
+
+      setProducts(updatedProducts);
+      setRentals((prev) => [...prev, ...results]);
+      setCart((prev) => prev.filter((p) => !items.some((i) => i.id === p.id)));
+      setActiveTab("rentals");
+      showToast(`🎉 ${results.length} item(ns) alugado(s) com sucesso!`);
+    } catch {
+      showToast("❌ Falha ao processar aluguel!", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const rentNow = async (product) => {
+    if (product.status !== "disponivel") {
+      showToast("🚫 Este item já está alugado!", "warning");
+      return;
+    }
+    await confirmRental([product]);
+  };
+
   const addToCart = (product) => {
     if (cart.find((p) => p.id === product.id)) {
       showToast("⚠️ Já está no carrinho!", "warning");
+      return;
+    }
+    if (product.status !== "disponivel") {
+      showToast("🚫 Produto já alugado!", "warning");
       return;
     }
     setCart([...cart, product]);
@@ -93,55 +151,8 @@ export default function RentalDashboard({ token, onLogout }) {
     showToast("❌ Item removido do carrinho.");
   };
 
-  const goToRentPage = (productId) => navigate(`/alugar/${productId}`);
-  const goToAdmin = () => navigate("/admin");
-
-  const confirmRental = async () => {
-    if (!cart.length) {
-      showToast("⚠️ Carrinho vazio!", "warning");
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const results = [];
-      for (const item of cart) {
-        const saleData = {
-          produtoId: item.id,
-          quantidade: 1,
-          tempoValor: item.tempoValor,
-        };
-        const res = await createSale(saleData, token);
-        results.push({
-          ...item,
-          backendId: res?.produtoId || null,
-          total: res?.total || item.tempoValor,
-          timestamp: new Date().toISOString(),
-        });
-      }
-      setRentals((prev) => [...prev, ...results]);
-      setCart([]);
-      localStorage.removeItem("cart");
-      setActiveTab("rentals");
-      showToast(`🎉 ${results.length} item(ns) alugado(s) com sucesso!`);
-    } catch (err) {
-      console.error("Erro ao confirmar aluguel:", err);
-      showToast(`❌ ${err.message || "Falha ao processar aluguel!"}`, "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const calculateCartTotal = () =>
     cart.reduce((sum, item) => sum + (item.tempoValor || 0), 0);
-
-  const scrollCatalog = (direction) => {
-    if (!catalogRef.current) return;
-    const scrollAmount = 400;
-    catalogRef.current.scrollBy({
-      left: direction === "left" ? -scrollAmount : scrollAmount,
-      behavior: "smooth",
-    });
-  };
 
   return (
     <div className="rental-dashboard">
@@ -149,7 +160,6 @@ export default function RentalDashboard({ token, onLogout }) {
         <h1>DoutorRent</h1>
         <span>Bem-vindo, {userEmail}</span>
         <div>
-          <button onClick={goToAdmin}>Área do Administrador</button>
           <button onClick={onLogout}>Sair</button>
         </div>
       </header>
@@ -178,18 +188,22 @@ export default function RentalDashboard({ token, onLogout }) {
       <main>
         {activeTab === "catalog" && (
           <div className="catalog-section" ref={catalogRef}>
-            <div className="catalog-nav">
-              <button onClick={() => scrollCatalog("left")}>←</button>
-              <button onClick={() => scrollCatalog("right")}>→</button>
-            </div>
             {productsLoading ? (
               <div className="loading-state">⏳ Carregando produtos...</div>
             ) : products.length === 0 ? (
               <div className="empty-state">📭 Nenhum produto disponível</div>
             ) : (
               products.map((p) => (
-                <div key={p.id} className="product-card">
+                <div
+                  key={p.id}
+                  className={`product-card ${
+                    rentedHighlight === p.id ? "rented-highlight" : ""
+                  }`}
+                >
                   <img src={p.image_url} alt={p.name} />
+                  {p.status !== "disponivel" && (
+                    <span className="status-badge rented">🔒 Alugado</span>
+                  )}
                   <h3>{p.name}</h3>
                   <p>Tamanho: {p.tamanho}</p>
                   <p>Cores: {p.cores}</p>
@@ -197,17 +211,23 @@ export default function RentalDashboard({ token, onLogout }) {
                   <div className="product-actions">
                     <button
                       onClick={() => addToCart(p)}
-                      disabled={cart.find((item) => item.id === p.id)}
+                      disabled={
+                        p.status !== "disponivel" ||
+                        cart.find((item) => item.id === p.id)
+                      }
                     >
-                      {cart.find((item) => item.id === p.id)
+                      {p.status !== "disponivel"
+                        ? "Indisponível"
+                        : cart.find((item) => item.id === p.id)
                         ? "✓ No Carrinho"
                         : "Adicionar ao Carrinho"}
                     </button>
                     <button
-                      onClick={() => goToRentPage(p.id)}
+                      onClick={() => rentNow(p)}
                       className="btn-secondary"
+                      disabled={p.status !== "disponivel"}
                     >
-                      Alugar Agora
+                      {p.status !== "disponivel" ? "Alugado" : "Alugar Agora"}
                     </button>
                   </div>
                 </div>
@@ -255,7 +275,7 @@ export default function RentalDashboard({ token, onLogout }) {
                     <span>R$ {calculateCartTotal().toFixed(2)}</span>
                   </div>
                   <button
-                    onClick={confirmRental}
+                    onClick={() => confirmRental(cart)}
                     disabled={isLoading}
                     className="btn-confirm"
                   >
@@ -280,15 +300,19 @@ export default function RentalDashboard({ token, onLogout }) {
               <div className="rentals-list">
                 {rentals.map((r, i) => (
                   <div key={r.backendId || i} className="rental-item">
-                    <h4>{r.name}</h4>
-                    <span>#{r.backendId || "Pendente"}</span>
-                    <p>
-                      Tamanho: {r.tamanho} | Cores: {r.cores}
+                    <div className="rental-item-header">
+                      <h4>{r.name}</h4>
+                      <span className="rental-status">#Pendente</span>
+                    </div>
+                    <p className="rental-info">
+                      Tamanho: <b>{r.tamanho}</b> | Cores: <b>{r.cores}</b>
                     </p>
-                    {r.timestamp && (
-                      <p>{new Date(r.timestamp).toLocaleDateString("pt-BR")}</p>
-                    )}
-                    <p>Total: R$ {r.total.toFixed(2)}</p>
+                    <p className="rental-date">
+                      {new Date(r.timestamp).toLocaleDateString("pt-BR")}
+                    </p>
+                    <p className="rental-total">
+                      Total: <span>R$ {r.total.toFixed(2)}</span>
+                    </p>
                   </div>
                 ))}
               </div>
@@ -299,12 +323,6 @@ export default function RentalDashboard({ token, onLogout }) {
 
       {toast.message && (
         <div className={`toast-message ${toast.type}`}>{toast.message}</div>
-      )}
-
-      {isLoading && (
-        <div className="loading-overlay">
-          <div className="loading-spinner">⏳ Processando...</div>
-        </div>
       )}
     </div>
   );

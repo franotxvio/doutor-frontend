@@ -743,7 +743,11 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
         {showViewModal && viewingProduct && (
           <div className="modal-overlay">
             <div className="modal-content view-modal">
+              <button className="close-btn-floating" onClick={closeViewModal}>
+                ✕
+              </button>
               <h2>Detalhes do Produto</h2>
+
               <div className="product-detail-card">
                 <img
                   src={getImageForCategory(
@@ -753,27 +757,30 @@ const AdminDashboard = ({ adminToken, onLogout }) => {
                   alt={viewingProduct.categoria}
                   className="product-detail-image"
                 />
+
                 <div className="product-detail-info">
                   <h3>{viewingProduct.categoria}</h3>
-                  <p>ID: {viewingProduct.id_roupa}</p>
-                  <p>Tamanho: {viewingProduct.tamanho}</p>
-                  <p>Cores: {viewingProduct.cores}</p>
-                  <p>Valor: R$ {viewingProduct.tempoValor}</p>
                   <p>
-                    Status: {getStatusIcon(viewingProduct.status)}{" "}
+                    <strong>ID:</strong> {viewingProduct.id_roupa}
+                  </p>
+                  <p>
+                    <strong>Tamanho:</strong> {viewingProduct.tamanho}
+                  </p>
+                  <p>
+                    <strong>Cores:</strong> {viewingProduct.cores}
+                  </p>
+                  <p>
+                    <strong>Valor:</strong> R$ {viewingProduct.tempoValor}
+                  </p>
+                  <p>
+                    <strong>Status:</strong>{" "}
+                    {getStatusIcon(viewingProduct.status)}{" "}
                     {getStatusLabel(viewingProduct.status)}
                   </p>
-                  <p>Localização: {viewingProduct.localizacao}</p>
+                  <p>
+                    <strong>Localização:</strong> {viewingProduct.localizacao}
+                  </p>
                 </div>
-              </div>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  onClick={closeViewModal}
-                  className="cancel-btn"
-                >
-                  Fechar
-                </button>
               </div>
             </div>
           </div>
