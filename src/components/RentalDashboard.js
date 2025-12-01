@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { createSale, apiFetch } from "../api";
 import "./RentalDashboard.css";
@@ -17,8 +17,8 @@ export default function RentalDashboard({ token, onLogout }) {
     []
   );
   const navigate = useNavigate();
+  const catalogRef = useRef(null);
 
-  // Função para corrigir URLs de imagem
   const normalizeImageUrl = (url) => {
     if (!url) return "https://via.placeholder.com/300x400";
     if (url.startsWith("https://")) return url;
@@ -34,31 +34,23 @@ export default function RentalDashboard({ token, onLogout }) {
     return url;
   };
 
-  // Carrega produtos do backend
   useEffect(() => {
     const fetchProducts = async () => {
       setProductsLoading(true);
       try {
         const data = await apiFetch("produtos", { method: "GET" }, token);
-
         const mappedProducts = (data || []).map((p) => {
           const finalImageUrl = normalizeImageUrl(p.image_url || p.imagem_url);
           return {
             id: p.id_roupa ?? 0,
-            id_roupa: p.id_roupa ?? 0,
             name: p.categoria ?? "Produto sem nome",
-            categoria: p.categoria ?? "Produto sem nome",
             tamanho: p.tamanho ?? "-",
             cores: p.cores ?? "-",
             tempoValor: p.tempo_valor ?? p.tempoValor ?? 0,
-            tempo_valor: p.tempo_valor ?? p.tempoValor ?? 0,
             status: p.status ?? "disponivel",
-            localizacao: p.localizacao ?? "-",
             image_url: finalImageUrl,
-            imagem_url: finalImageUrl,
           };
         });
-
         const availableProducts = mappedProducts.filter(
           (p) => p.status === "disponivel"
         );
@@ -73,23 +65,13 @@ export default function RentalDashboard({ token, onLogout }) {
     fetchProducts();
   }, [token]);
 
-  // Carrega carrinho do localStorage
   useEffect(() => {
-    try {
-      const savedCart = localStorage.getItem("cart");
-      if (savedCart) setCart(JSON.parse(savedCart));
-    } catch (err) {
-      console.error("Erro ao carregar carrinho:", err);
-    }
+    const savedCart = localStorage.getItem("cart");
+    if (savedCart) setCart(JSON.parse(savedCart));
   }, []);
 
-  // Salva carrinho no localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem("cart", JSON.stringify(cart));
-    } catch (err) {
-      console.error("Erro ao salvar carrinho:", err);
-    }
+    localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
 
   const showToast = (message, type = "success") => {
@@ -119,11 +101,9 @@ export default function RentalDashboard({ token, onLogout }) {
       showToast("⚠️ Carrinho vazio!", "warning");
       return;
     }
-
     setIsLoading(true);
     try {
       const results = [];
-
       for (const item of cart) {
         const saleData = {
           produtoId: item.id,
@@ -131,7 +111,6 @@ export default function RentalDashboard({ token, onLogout }) {
           tempoValor: item.tempoValor,
         };
         const res = await createSale(saleData, token);
-
         results.push({
           ...item,
           backendId: res?.produtoId || null,
@@ -139,7 +118,6 @@ export default function RentalDashboard({ token, onLogout }) {
           timestamp: new Date().toISOString(),
         });
       }
-
       setRentals((prev) => [...prev, ...results]);
       setCart([]);
       localStorage.removeItem("cart");
@@ -156,13 +134,24 @@ export default function RentalDashboard({ token, onLogout }) {
   const calculateCartTotal = () =>
     cart.reduce((sum, item) => sum + (item.tempoValor || 0), 0);
 
+  const scrollCatalog = (direction) => {
+    if (!catalogRef.current) return;
+    const scrollAmount = 400;
+    catalogRef.current.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <div className="rental-dashboard">
       <header>
         <h1>DoutorRent</h1>
         <span>Bem-vindo, {userEmail}</span>
-        <button onClick={goToAdmin}>Área do Administrador</button>
-        <button onClick={onLogout}>Sair</button>
+        <div>
+          <button onClick={goToAdmin}>Área do Administrador</button>
+          <button onClick={onLogout}>Sair</button>
+        </div>
       </header>
 
       <nav>
@@ -188,39 +177,41 @@ export default function RentalDashboard({ token, onLogout }) {
 
       <main>
         {activeTab === "catalog" && (
-          <div className="catalog-section">
+          <div className="catalog-section" ref={catalogRef}>
+            <div className="catalog-nav">
+              <button onClick={() => scrollCatalog("left")}>←</button>
+              <button onClick={() => scrollCatalog("right")}>→</button>
+            </div>
             {productsLoading ? (
               <div className="loading-state">⏳ Carregando produtos...</div>
             ) : products.length === 0 ? (
               <div className="empty-state">📭 Nenhum produto disponível</div>
             ) : (
-              <div className="products-grid">
-                {products.map((p) => (
-                  <div key={p.id} className="product-card">
-                    <img src={p.image_url} alt={p.name} />
-                    <h3>{p.name}</h3>
-                    <p>Tamanho: {p.tamanho}</p>
-                    <p>Cores: {p.cores}</p>
-                    <p className="price">R$ {p.tempoValor.toFixed(2)}</p>
-                    <div className="product-actions">
-                      <button
-                        onClick={() => addToCart(p)}
-                        disabled={cart.find((item) => item.id === p.id)}
-                      >
-                        {cart.find((item) => item.id === p.id)
-                          ? "✓ No Carrinho"
-                          : "Adicionar ao Carrinho"}
-                      </button>
-                      <button
-                        onClick={() => goToRentPage(p.id)}
-                        className="btn-secondary"
-                      >
-                        Alugar Agora
-                      </button>
-                    </div>
+              products.map((p) => (
+                <div key={p.id} className="product-card">
+                  <img src={p.image_url} alt={p.name} />
+                  <h3>{p.name}</h3>
+                  <p>Tamanho: {p.tamanho}</p>
+                  <p>Cores: {p.cores}</p>
+                  <p className="price">R$ {p.tempoValor.toFixed(2)}</p>
+                  <div className="product-actions">
+                    <button
+                      onClick={() => addToCart(p)}
+                      disabled={cart.find((item) => item.id === p.id)}
+                    >
+                      {cart.find((item) => item.id === p.id)
+                        ? "✓ No Carrinho"
+                        : "Adicionar ao Carrinho"}
+                    </button>
+                    <button
+                      onClick={() => goToRentPage(p.id)}
+                      className="btn-secondary"
+                    >
+                      Alugar Agora
+                    </button>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))
             )}
           </div>
         )}
